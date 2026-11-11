@@ -1,0 +1,31 @@
+#settingsToggle, #fullscreenUpload { display: none }
+main.expanded {
+ position: fixed; inset: 0; z-index: 10; max-width: none; margin: 0; padding: 0;
+ background: #26302e; overflow: hidden;
+ display: flex; flex-direction: column;
+}
+.expanded .heading, .expanded .foot, .expanded .viewer > .bar > b { display: none }
+.expanded .layout, .expanded section, .expanded .viewer { display: contents }
+.expanded .stage { position: absolute; inset: 0; height: 100% }
+.expanded .viewer > .bar, .expanded .playback, .expanded aside {
+ background: rgba(251,252,248,.96); border: 1px solid #cbd0c7;
+ border-radius: 12px; box-shadow: 0 4px 20px #17251d30; z-index: 2;
+}
+.expanded .viewer > .bar { position: relative; align-self: flex-end; padding: 7px; margin: 10px }
+.expanded .tabs { justify-content: flex-end }
+.expanded .playback { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); width: min(460px,calc(100% - 24px)); padding: 10px }
+.expanded aside { display: none; align-self: flex-end; position: relative; z-index: 3; width: min(320px,calc(100% - 20px)); margin: 0 10px 12px; overflow: auto; max-height: calc(100% - 165px) }
+.expanded.settings-open aside { display: block }
+.expanded #settingsToggle, .expanded #fullscreenUpload { display: inline-block }
+.expanded #fullscreenUpload { margin-bottom: 14px }
+.expanded #editor { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; background: #d9ded6 }
+.expanded:has(#editor:not([hidden])) .viewer > .bar { margin-bottom: 0 }
+.expanded #editor:not([hidden]) { position: relative; flex: 1; min-height: 0 }
+.expanded:has(#editor:not([hidden])) aside { position: absolute; right: 0; bottom: 0 }
+.expanded .draw-paper { flex: 1; min-height: 0; display: grid; place-items: center; container-type: size }
+.expanded .draw-paper canvas { width: min(100cqw,177.42cqh) }
+.expanded #editor > .bar { background: #fbfcf8 }
+@media(max-width:700px) {
+ .expanded .tag { top: auto; bottom: 120px }
+ .expanded .coord { bottom: 99px }
+}
