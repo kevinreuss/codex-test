@@ -55,6 +55,7 @@ function listLines(){
  $('nest').disabled=$('applyLines').disabled=!designs.some(d=>d.strokes.length&&d.count);
 }
 function editing(open){
+ if(open)leaveRealView();
  for(const id of ['editor','lineSettings'])$(id).hidden=!open;
  for(const id of ['stage','pan','jobSettings'])$(id).hidden=open;
  for(const selector of ['.playback','.foot'])document.querySelector(selector).hidden=open;
@@ -65,7 +66,7 @@ function editing(open){
  }
 }
 $('drawTab').onclick=()=>editing(true);
-for(const [id,top] of [['iso',false],['topView',true]])$(id).onclick=()=>{editing(false);preset(top)};
+for(const [id,top] of [['iso',false],['topView',true]])$(id).onclick=()=>{leaveRealView();editing(false);preset(top)};
 $('brush').oninput=()=>{$('widthValue').value=$('brush').value+' mm'};
 function paperPoint(e){
  const rect=paper.getBoundingClientRect();
@@ -167,4 +168,20 @@ $('applyLines').onclick=()=>{
  $('filename').textContent=layout?'Nesting':'Freihandzeichnung';
  $('dimensions').textContent=entries.length+' Stück auf dem Werkstück';
  $('error').textContent='';editing(false);panel();plan();preset(false);
+};
+
+$('realView').onclick=()=>{
+ if(realViewTime!==null)return;
+ if(!$('editor').hidden&&designs.some(d=>d.count&&d.strokes.length)){
+  $('applyLines').click();
+  if(!$('editor').hidden)return;
+ }
+ editing(false);
+ cancelAnimationFrame(frame);playing=false;
+ realViewTime=t;
+ clearReveal();
+ $('iso').classList.remove('active');$('topView').classList.remove('active');
+ $('realView').classList.add('active');$('realView').setAttribute('aria-pressed','true');
+ document.querySelector('.playback').hidden=true;
+ show(duration,true);
 };

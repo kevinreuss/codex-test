@@ -80,13 +80,14 @@ function cutMesh(points,holes){
  return mesh;
 }
 
-function startReveal(){
+function startReveal(instant=false){
  if(reveal)return;
  const rings=cutContours(groups);
- if(!rings.length)return;
+ if(!rings.length&&!instant)return;
  const root=new THREE.Group(),product=new THREE.Group(),stars=new THREE.Group();
  const corners=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([x,y])=>new THREE.Vector2(x*W/2,y*H/2));
- root.add(cutMesh(corners,rings.filter(r=>r.depth===1)));
+ if(rings.length)root.add(cutMesh(corners,rings.filter(r=>r.depth===1)));
+ else product.add(cutMesh(corners,[]));
  for(const ring of rings.filter(r=>r.depth%2))product.add(cutMesh(ring.points,ring.children));
  const scraps=new THREE.Group();
  for(const ring of rings.filter(r=>r.depth%2===0))scraps.add(cutMesh(ring.points,ring.children));
@@ -110,7 +111,7 @@ function startReveal(){
  const original={target:target.clone(),angle,elevation,zoom};
  reveal={root,original,glints};
  blank.visible=sheetFace.visible=overlay.visible=false;
- const started=performance.now(),smooth=v=>{v=Math.min(1,Math.max(0,v));return v*v*(3-2*v)};
+ const now=performance.now(),started=now-(instant?3100:0),smooth=v=>{v=Math.min(1,Math.max(0,v));return v*v*(3-2*v)};
  function animate(now){
   const sec=(now-started)/1000,open=smooth(sec/1.05),lift=smooth((sec-.8)/1.15),out=smooth((sec-1.55)/1.5);
   lidHinge.rotation.x=-1.25*open;
@@ -138,5 +139,5 @@ function startReveal(){
   $('state').textContent=out===1?'Werkstück fertig':lift>0?'Werkstück entnehmen':'Deckel öffnet sich';
   view();finishFrame=requestAnimationFrame(animate);
  }
- animate(started);
+ animate(now);
 }

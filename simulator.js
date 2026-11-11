@@ -56,6 +56,16 @@ const spot=new THREE.Mesh(new THREE.SphereGeometry(1.5,10,8),new THREE.MeshBasic
 const target=new THREE.Vector3(0,98,-65);
 let angle=.22,elevation=.44,zoom=1,drag;
 let panTool=false;
+let realViewTime=null;
+function leaveRealView(){
+ if(realViewTime===null)return;
+ const previous=realViewTime;
+ realViewTime=null;
+ $('realView').classList.remove('active');
+ $('realView').setAttribute('aria-pressed','false');
+ document.querySelector('.playback').hidden=false;
+ clearReveal();show(previous,true);
+}
 $('pan').onclick=()=>{
  panTool=!panTool;
  $('pan').setAttribute('aria-pressed',String(panTool));
@@ -83,12 +93,12 @@ canvas.onpointermove=e=>{
  }else{
   angle-=dx*.008;
   elevation=Math.max(.12,Math.min(1.569,elevation+dy*.006));
-  $('topView').classList.remove('active');$('iso').classList.add('active');
+  if(realViewTime===null){$('topView').classList.remove('active');$('iso').classList.add('active')}
  }
  drag.x=e.clientX;drag.y=e.clientY;view();
 };
 canvas.onlostpointercapture=e=>{if(drag?.id===e.pointerId)drag=null};
-canvas.onwheel=e=>{e.preventDefault();zoom=Math.min(4,Math.max(.29,zoom*Math.exp(-e.deltaY*.001)));view()};
+canvas.onwheel=e=>{e.preventDefault();zoom=Math.min(reveal?12:4,Math.max(.29,zoom*Math.exp(-e.deltaY*.001)));view()};
 function preset(top){angle=top?0:.22;elevation=top?1.5707:.44;target.set(0,top?0:98,top?0:-65);zoom=top?1.6:1;$('iso').classList.toggle('active',!top);$('topView').classList.toggle('active',top);view()}
 $('iso').onclick=()=>preset(false);$('topView').onclick=()=>preset(true);
 const modes={engrave:'Gravieren',score:'Ritzen',cut:'Schneiden',skip:'Überspringen'}, speeds={engrave:150,score:55,cut:18};
@@ -148,7 +158,7 @@ function plan(){clearReveal();playing=false;moves=[];duration=0;let x=8,y=8;
  if(!lit&&first>=0){move((reverse?w-first:first)/S,(j+.5)/S,'travel',180);move((reverse?w-k:k)/S,(j+.5)/S,'engrave',g.speed);first=-1}}}
  }else for(const sh of g.shapes)for(const line of cutLines(sh,g.mode)){move(line[0].x,line[0].y,'travel',180);for(const p of line.slice(1))move(p.x,p.y,g.mode,g.speed)}
  }
- previewMap.needsUpdate=true;show(0,true)}
+ previewMap.needsUpdate=true;if(realViewTime!==null)realViewTime=0;show(realViewTime===null?0:duration,true)}
 function stroke(m,f){if(m.mode==='travel'||f<=0)return;work.strokeStyle={cut:'#231a13',score:'#7f5131',engrave:'#805532'}[m.mode];work.lineWidth=m.mode==='cut'?.75:m.mode==='score'?.45:.36;work.beginPath();work.moveTo(m.x,m.y);work.lineTo(m.x+(m.nx-m.x)*f,m.y+(m.ny-m.y)*f);work.stroke()}
 function clock(v){return Math.floor(v/60)+':'+String(Math.floor(v%60)).padStart(2,'0')}
 function show(value,clear=false){
@@ -163,7 +173,7 @@ function show(value,clear=false){
  fumes.update(x-W/2,y-H/2,m?.mode,playing,clear);
  $('coord').textContent='X '+x.toFixed(1)+'   Y '+y.toFixed(1)+' mm';$('time').textContent=clock(t)+' / '+clock(duration);$('seek').value=duration?t/duration*100000:0;
  $('state').textContent=playing?(m?.mode==='travel'?'Leerfahrt':modes[m?.mode]):t===0?'Bereit':t>=duration?'Abgeschlossen':'Pausiert';
- $('play').textContent=playing?'Ⅱ Pause':t>=duration&&duration?'↺ Wiederholen':'▶ Starten';$('play').disabled=!duration;if(duration&&t===duration)startReveal();renderer.render(scene,camera)}
+ $('play').textContent=playing?'Ⅱ Pause':t>=duration&&duration?'↺ Wiederholen':'▶ Starten';$('play').disabled=!duration;if((duration||realViewTime!==null)&&t===duration)startReveal(realViewTime!==null);renderer.render(scene,camera)}
 function tick(now){if(!playing)return;const next=t+(now-last)/1000*parseInt($('rate').value);last=now;if(next>=duration)playing=false;show(next);if(playing)frame=requestAnimationFrame(tick)}
 let frame=0;
 $('play').onclick=()=>{cancelAnimationFrame(frame);if(!playing&&t>=duration)show(0,true);playing=!playing;last=performance.now();show(t);if(playing)frame=requestAnimationFrame(tick)};
